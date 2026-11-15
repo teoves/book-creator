@@ -331,3 +331,22 @@ def test_book_creator_credited_before_editorial_attributions(editorial, tmp_path
         assert page.index(__url__) < page.index("Editorial material") < page.index("assistance of an LLM")
     else:
         assert "Editorial material" not in page
+
+
+def test_marxists_contents_page_follows_links_across_directories():
+    from bookcreator.sites import marxists
+    from bookcreator.model import WorkRef
+
+    class F:
+        def get_text(self, u):
+            return ('<p><a href="../../index.htm">Archive</a> <a href="../1916/07/07.htm">7 July 1916</a> '
+                    '<a href="../1917/01/15.htm">15 January 1917</a> <a href="../../../trotsky/x.htm">other</a> '
+                    '<a href="index.htm">index</a> <a href="../1916/07/07.htm#p2">again</a></p>')
+
+        def final_url(self, u):
+            return u
+
+    w = WorkRef(url="https://www.marxists.org/archive/lux/1918/letters.htm", title="Letters", contents_page=True)
+    marxists.expand(F(), w)
+    assert [p.url.split("/lux/")[1] for p in w.pages] == ["1918/letters.htm", "1916/07/07.htm", "1917/01/15.htm"]
+    assert w.pages[1].title == "7 July 1916"

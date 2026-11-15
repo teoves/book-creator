@@ -59,6 +59,11 @@ is a commented template. To make a new book from marxists.org:
 2. run `list`. If works are missing, change `link_selector` (a CSS selector for the links on the
    index page; author indexes differ, e.g. `p.information a` or `p.indentb a`);
 3. use `exclude = ["…"]` to drop duplicates or variants, and `[[extra]]` to add works hosted elsewhere;
+   if `list` shows a work with only one page that is really a contents page linking to texts
+   filed elsewhere in the archive (e.g. letters filed by date), add it to
+   `contents_pages = ["1918/letters-sophie.htm"]` (paths relative to `scope`): every page in the
+   author's archive that it links to becomes a chapter, in link order. Ordinary multi-chapter
+   works (`…/index.htm` linking to pages in the same folder) need nothing;
 4. run `build`.
 
 ### Other websites
