@@ -118,6 +118,9 @@ def discover(fetcher, recipe) -> list[WorkRef]:
     soup = BeautifulSoup(fetcher.get_text(index), "lxml")
     base_url = fetcher.final_url(index)            # resolve links against where it was served from
 
+    # works whose page is only a list of links to pages elsewhere in the archive
+    # (e.g. a collection of letters filed by date): follow those links as chapters
+    contents = {urljoin(scope, c) for c in src.get("contents_pages", [])}
     works: list[WorkRef] = []
     seen: set[str] = set()
     last: WorkRef | None = None
@@ -141,7 +144,7 @@ def discover(fetcher, recipe) -> list[WorkRef]:
             year, text = last.year, f"{last.title} ({desc + ' ' if desc else ''}{text})"
         if not url.startswith(scope) and year is None:
             continue                        # credits / navigation links, not works
-        ref = WorkRef(url=url, title=text, year=year)
+        ref = WorkRef(url=url, title=text, year=year, contents_page=url in contents)
         if not url.startswith(scope):
             ref.skipped_reason = "hosted outside this author archive"
         elif not url.lower().endswith(_HTML_EXT):
@@ -155,6 +158,9 @@ def expand(fetcher, work: WorkRef) -> None:
     """Fill work.pages. Directory-style works (…/index.htm) get their chapters."""
     work.pages = [PageRef(url=work.url, title=None)]
     leaf = work.url.rsplit("/", 1)[1].lower()
+    if work.contents_page:
+        _expand_contents(fetcher, work)
+        return
     if not leaf.startswith("index."):
         return
     html = fetcher.get_text(work.url)
@@ -168,6 +174,24 @@ def expand(fetcher, work: WorkRef) -> None:
         if not rest or "/" in rest or not rest.lower().endswith(_HTML_EXT):
             continue
         if rest.lower().startswith("index.") or url in seen:
+            continue
+        seen.add(url)
+        work.pages.append(PageRef(url=url, title=_clean_text(a.get_text()) or None))
+
+
+def _expand_contents(fetcher, work: WorkRef) -> None:
+    """Chapters = every HTML page in the same author archive linked from the contents page,
+    in link order (not just same-directory links, unlike index.htm works)."""
+    html = fetcher.get_text(work.url)
+    page = fetcher.final_url(work.url)
+    root = re.match(r"(https?://[^/]+/archive/[^/]+/)", page)
+    root = root.group(1) if root else page.rsplit("/", 1)[0] + "/"
+    soup = BeautifulSoup(html, "lxml")
+    seen = {work.url, page}
+    for a in soup.find_all("a", href=True):
+        url = urldefrag(urljoin(page, a["href"]))[0]
+        if (url in seen or not url.startswith(root) or not url.lower().endswith(_HTML_EXT)
+                or url.rsplit("/", 1)[1].lower().startswith("index.")):
             continue
         seen.add(url)
         work.pages.append(PageRef(url=url, title=_clean_text(a.get_text()) or None))

@@ -25,6 +25,8 @@ scope         = "https://www.marxists.org/archive/luxemburg/"   # only follow li
 link_selector = "p.indentb a"     # CSS selector for the works list on the index page
                                   # (other author archives use e.g. "p.information a")
 exclude       = []                # URL substrings to leave out
+# contents pages whose texts are filed elsewhere in the archive: follow their links as chapters
+contents_pages = ["1918/letters-sophie.htm"]   # the prison letters, filed by date under 1916/–1918/
 
 # Works hosted elsewhere that you want to add:
 # [[extra]]

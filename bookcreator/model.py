@@ -17,6 +17,7 @@ class WorkRef:
     year: str | None = None
     pages: list[PageRef] = field(default_factory=list)   # filled by the site adapter
     skipped_reason: str | None = None                     # e.g. "PDF only"
+    contents_page: bool = False                           # follow its in-archive links as chapters
 
 
 @dataclass
