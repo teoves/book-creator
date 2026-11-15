@@ -92,9 +92,15 @@ other note imitates: register is far easier to copy from an example than from a 
 - Each agent receives the style guide below, the path of the voice-model note, its list of
   works (slug, label, word count, tier), any per-work guidance (for example "this is the second
   version of X; explain how it differs, don't summarise it again" or "novel: don't reveal the
-  ending"), and the output path `editorial/<book>/<slug>.md`.
+  ending"), and the output paths.
 - Each agent **reads every work in full** (short texts in one go, long ones in sections) and
-  touches no files other than its own notes.
+  touches no files other than its own.
+- **Every note comes with an evidence file**, `editorial/<book>/evidence/<slug>.json`. It lists
+  each claim the note makes about the text (what is argued, depicted, said, and *by whom to
+  whom*) with the verbatim passage(s) that support it. Historical context not stated in the
+  text is listed too, marked `"basis": "context"`. See the format in `bookcreator/verify.py`.
+  Writing the evidence is how authors catch their own paraphrase errors: if no passage says
+  it, the sentence goes.
 - Ask each agent for a report of at most 100 words: files written, word counts, and anything it
   left out because it couldn't be stated confidently. Don't let it paste the notes into its
   report.
@@ -119,22 +125,47 @@ reference introduction followed this arc:
 Take every quotation in the introduction from the exported texts. Search for each one with
 `grep` before using it.
 
-### 5. Verify, then edit
+### 5. Verify: mechanical checks, then an independent review
 
-1. `bookcreator build`, then `bookcreator check --strict output/<book>.epub`. Every “quotation”
-   in a note must appear verbatim in its work. For each miss, either correct it to the exact
-   wording or remove the quotation marks. Misses marked "found elsewhere in the book" are cross-
-   references and are fine if they are attributed correctly. `check` ignores quote marks and
-   apostrophes but not spelling, so match the text's spelling (labour/labor) exactly.
-2. Search for leftover hedging and fix every hit:
+Quotation checks alone are not enough. A note once said "Russia, she is told, is saving
+herself from the tsar" when the text has *Germany* promising to free Russia from the tsar:
+every quotation was exact, and the meaning was wrong. So verification has two layers.
+
+1. **Mechanical:** `bookcreator verify recipes/<book>.toml`. It checks that every “quotation”
+   in a note and every evidence passage occurs verbatim in that work. (It ignores quote marks
+   and case, not spelling.) Fix every ✗ before going on.
+2. **Independent review:** one *fresh* verifier agent per batch, never the note's author.
+   It gets the note and the source text, and nothing else, with this brief:
+   - Read the work in full. Then go through the note **sentence by sentence**. For every
+     sentence that says anything about the text (who says what, to whom, in what order; what is
+     argued or rejected; what happens in a story; how a work begins or ends), find the
+     passage that supports it.
+   - Be adversarial. Look especially for misattribution (the wrong speaker, country, party or
+     character), inversion (the author *rejects* what the note says she argues), conflation
+     of two passages, overstatement ("always", "every", "first"), invented detail, and
+     context presented as if it came from the text.
+   - Write `editorial/<book>/review/<slug>.json`: one entry per checked sentence, with
+     verdict `ok`, `unsupported` or `wrong`, a one-line `problem`, and verbatim `evidence`.
+     Context sentences that the text can't confirm are `unsupported` unless they are
+     common knowledge (dates of wars, revolutions, offices held).
+   - Don't edit the note.
+3. **Fix and re-run.** The lead agent fixes every `wrong` and `unsupported` (rewrite or cut,
+   never hedge), updates the evidence, and re-runs
+   `bookcreator verify recipes/<book>.toml --require-review` until nothing is flagged. A
+   corrected sentence needs a fresh `ok` in the review file, from the lead agent re-reading
+   the passage. A model may not mark its own fix as verified without citing the passage.
+4. Then `bookcreator build`, `bookcreator check --strict`, and a search for leftover hedging:
    `grep -n -i -E "credit block|does not say|does not state|readers should|this note|should be read|probably|perhaps|unknown|not known" editorial/<book>/*.md`
-   ("perhaps" can be legitimate in narration; judge each one).
-3. The lead agent reads every core note in full and spot-checks the rest, looking for facts not
-   supported by the text, lists that don't add up ("three principles" with four items),
-   duplicated paragraphs, wrong titles, and agents contradicting each other or the introduction.
-   Agents' notes also catch errors in the introduction, so fix those as well.
-4. `bookcreator preview` and a final `check`. Then report to the user: what was written, what was
-   fixed, which points remain uncertain, and how much quota was used.
+5. The introduction gets the same treatment. The lead agent writes
+   `evidence/introduction.json`, quoting the works the claims come from, and a fresh verifier
+   reviews it against the texts it cites.
+6. `bookcreator preview` and a final report to the user: what was written, what the review
+   caught, what was cut, and how much quota was used.
+
+Verification is expensive, because every work is read again by someone new. For the 320k-word
+reference book, the full pass took nearly 90% of a Claude Pro 5-hour window: rewriting with evidence
+(5 agents), independent review (6 agents), and one fixer. It caught 70+ real errors that quotation
+checks had missed. Budget for it from the start, and split a large book across two windows.
 
 ### Length tiers
 
@@ -210,3 +241,6 @@ work done. Readers are intelligent non-specialists.
   introduction.
 - Agents add apostrophes and change spelling inside quotations. `check --strict` catches this;
   fix each miss to the source's exact wording.
+- A note can be wrong while every quotation in it is exact. A reader caught "Russia is saving
+  herself from the tsar" for a passage about *German* propaganda. Hence evidence files and the
+  independent review: paraphrase is where the errors hide.
