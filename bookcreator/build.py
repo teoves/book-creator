@@ -16,6 +16,7 @@ from html import unescape as _html_unescape
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from . import __url__
 from . import clean as C
 from .cover import make_cover
 from .epub import EpubBuilder, TocNode, xhtml_page
@@ -223,6 +224,7 @@ class Build:
                 out.append(f'<li><a href="{ch.file.split("/")[-1]}">{escape(w.label)}</a>: '
                            f"{escape(ch.copyright_notice)}</li>")
             out.append("</ul>")
+        out.append(self._production_credit())
         ed = self.r.get("editorial", {})
         if self.ed_dir:
             out.append("<h2>Editorial material</h2>")
@@ -232,11 +234,21 @@ class Build:
                        "compilation.</p>")
             if ed.get("attribution"):
                 out.append(f"<p>{escape(ed['attribution'])}</p>")
-        if self.r.get("book", {}).get("compiler"):
+        return "\n".join(out)
+
+    def _production_credit(self) -> str:
+        """Credit for the tool that made the book. Always present, and placed before any
+        editorial (and AI) attributions, whether or not the edition has an editorial layer."""
+        b, src = self.r["book"], self.r["source"]["index"]
+        out = ["<h2>How this edition was made</h2>",
+               f'<p>This edition was compiled with <a href="{escape(__url__)}">book-creator</a> '
+               f"({escape(__url__)}), an open-source tool that builds e-books from online archives. "
+               f"It downloaded the texts from {escape(site_ref(self.site))} on {_dt.date.today():%d %B %Y}, "
+               f"removed the site’s navigation and assembled this book. The texts themselves are "
+               f"reproduced as published by the archive.</p>"]
+        if b.get("compiler"):
             out.append(f"<p>Compiled by {escape(b['compiler'])}.</p>")
-        out.append(f'<p class="small">Compiled with book-creator on {_dt.date.today():%d %B %Y}. '
-                   f'Source index: <a href="{escape(self.r["source"]["index"])}">'
-                   f'{escape(self.r["source"]["index"])}</a></p>')
+        out.append(f'<p class="small">Source index: <a href="{escape(src)}">{escape(src)}</a></p>')
         return "\n".join(out)
 
     def _sources_page(self) -> str:
@@ -273,7 +285,7 @@ class Build:
             rights=f"{s.LICENSE_NAME} {s.LICENSE_URL}. Individual works may carry their own "
                    f"copyright notices (see 'About This Edition').",
             source=self.r["source"]["index"], subjects=b.get("subjects", []),
-            contributors=getattr(s, "CONTRIBUTORS", []),
+            contributors=getattr(s, "CONTRIBUTORS", []) + [f"book-creator ({__url__})"],
         )
         ep.add("style.css", CSS, "text/css")
 

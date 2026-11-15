@@ -22,6 +22,10 @@ classifiers = [
     "Topic :: Text Processing :: Markup :: HTML",
 ]
 
+[project.urls]
+Homepage = "https://github.com/teoves/book-creator"
+Repository = "https://github.com/teoves/book-creator"
+
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
