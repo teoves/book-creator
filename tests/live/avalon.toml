@@ -1,0 +1,29 @@
+# Live smoke test: the Avalon Project (Yale Law School) – static 1990s-style .asp pages.
+[book]
+title  = "The Federalist (sample)"
+author = "Alexander Hamilton, James Madison, John Jay"
+
+[source]
+site          = "generic"
+index         = "https://avalon.law.yale.edu/subject_menus/fed.asp"
+site_name     = "the Avalon Project, Yale Law School"
+license_name  = "Public domain texts"
+content_xpath = "//div[@class='text-properties']"
+junk_xpaths   = [".//table[@class='site-menu']",
+                 ".//table[.//a[contains(@href, 'subject_menus/')]]"]   # Previous / Contents / Next bars
+
+[[works]]
+url   = "https://avalon.law.yale.edu/18th_century/fed01.asp"
+title = "Federalist No. 1"
+year  = "1787"
+
+[[works]]
+url   = "https://avalon.law.yale.edu/18th_century/fed10.asp"
+title = "Federalist No. 10"
+year  = "1787"
+
+[cover]
+enabled = false
+
+[output]
+formats = ["epub"]

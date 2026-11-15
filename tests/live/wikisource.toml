@@ -1,0 +1,34 @@
+# Live smoke test: Wikisource – MediaWiki, extensionless URLs, heavy chrome.
+# Elements marked ws-noexport are Wikisource's own "not part of the text" convention.
+[book]
+title  = "The Soul of Man Under Socialism (sample)"
+author = "Oscar Wilde"
+
+[source]
+site          = "generic"
+index         = "https://en.wikisource.org/"
+site_name     = "Wikisource"
+license_name  = "Public domain text; Wikisource contributions CC BY-SA 4.0"
+license_url   = "https://creativecommons.org/licenses/by-sa/4.0/"
+content_xpath = "//div[@id='mw-content-text']/div[contains(@class, 'mw-parser-output')]"
+junk_xpaths   = [
+  ".//*[contains(concat(' ', normalize-space(@class), ' '), ' ws-noexport ')]",
+  ".//*[contains(concat(' ', normalize-space(@class), ' '), ' mw-editsection ')]",
+  ".//*[contains(concat(' ', normalize-space(@class), ' '), ' noprint ')]",
+  ".//table[contains(concat(' ', normalize-space(@class), ' '), ' mbox ') or .//td[contains(@class, 'mbox-text')]]",
+  ".//*[contains(concat(' ', normalize-space(@class), ' '), ' licenseContainer ')]",
+  ".//span[starts-with(@class, 'licensetpl')]",     # hidden machine-readable licence fields
+]
+# the licence banner is provenance: keep it as the work's credits instead of in the text
+credit_xpath  = "//div[contains(concat(' ', normalize-space(@class), ' '), ' licenseContainer ')]"
+
+[[works]]
+url   = "https://en.wikisource.org/wiki/The_Fortnightly_Review/Volume_49/The_Soul_of_Man_Under_Socialism"
+title = "The Soul of Man Under Socialism"
+year  = "1891"
+
+[cover]
+enabled = false
+
+[output]
+formats = ["epub"]

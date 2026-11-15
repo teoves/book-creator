@@ -1,0 +1,21 @@
+# --- environment & tooling ---------------------------------------------------
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.DS_Store
+
+# --- generated per build ------------------------------------------------------
+# downloaded pages (re-fetched on demand)
+/cache/
+# generated EPUB / AZW3 / reports
+/output/
+
+# --- personal book projects (keep out of the public repo) ---------------------
+# Only the example recipe is published; your own recipes and editorial text stay local.
+/recipes/*
+!/recipes/example-*.toml
+/editorial/

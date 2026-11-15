@@ -1,0 +1,28 @@
+# Live smoke test: The Anarchist Library – modern Bootstrap HTML; the text lives in #thework.
+[book]
+title  = "Emma Goldman on Love (sample)"
+author = "Emma Goldman"
+
+[source]
+site          = "generic"
+index         = "https://theanarchistlibrary.org/"
+site_name     = "The Anarchist Library"
+license_name  = "Public domain / anti-copyright"
+content_xpath = "//div[@id='thework']"
+credit_xpath  = "//div[@id='preamblesrc']"
+
+[[works]]
+url   = "https://theanarchistlibrary.org/library/emma-goldman-marriage-and-love"
+title = "Marriage and Love"
+year  = "1914"
+
+[[works]]
+url   = "https://theanarchistlibrary.org/library/emma-goldman-the-tragedy-of-woman-s-emancipation"
+title = "The Tragedy of Woman’s Emancipation"
+year  = "1906"
+
+[cover]
+enabled = false
+
+[output]
+formats = ["epub"]

@@ -1,0 +1,52 @@
+# Example recipe: every HTML work in the Marxists Internet Archive's Rosa Luxemburg archive.
+#
+#   bookcreator list  recipes/example-luxemburg.toml    # preview what would be included
+#   bookcreator build recipes/example-luxemburg.toml    # -> output/rosa-luxemburg-selected-works.epub/.azw3
+#
+# To make your own: copy this file, point [source].index/scope at another author's archive,
+# run `list`, adjust link_selector / exclude until the list looks right, then `build`.
+
+[book]
+title       = "Rosa Luxemburg: Works from the Marxists Internet Archive"
+short_title = "Works"             # used on the cover
+subtitle    = "1893–1919"
+author      = "Rosa Luxemburg"
+language    = "en"
+description = "English-language writings of Rosa Luxemburg available on the Marxists Internet Archive."
+subjects    = ["Marxism", "Socialism", "Political theory"]
+order       = "index"             # "index" (as listed on the site) or "chronological"
+images      = true                # embed images that appear inside the works
+# compiler  = "Your Name"         # optional: printed on the 'About This Edition' page
+
+[source]
+site          = "marxists"        # adapter in bookcreator/sites/ ("marxists" or "generic")
+index         = "https://www.marxists.org/archive/luxemburg/index.htm"
+scope         = "https://www.marxists.org/archive/luxemburg/"   # only follow links inside this archive
+link_selector = "p.indentb a"     # CSS selector for the works list on the index page
+                                  # (other author archives use e.g. "p.information a")
+exclude       = []                # URL substrings to leave out
+
+# Works hosted elsewhere that you want to add:
+# [[extra]]
+# url   = "https://www.marxists.org/..."
+# title = "Some Work"
+# year  = "1915"
+
+[cover]
+enabled    = true
+# portrait = "https://www.marxists.org/archive/luxemburg/<image>.jpg"   # optional image on the cover
+background = "#1f4d2e"
+
+[output]
+filename = "rosa-luxemburg-works"
+formats  = ["epub", "azw3"]       # anything Calibre's ebook-convert supports: mobi, pdf, docx…
+
+# Optional editorial layer: an introduction and a note before each work, as Markdown files.
+#   <dir>/introduction.md  and  <dir>/<work-slug>.md
+# The slug is the work's URL path inside `scope`, e.g. 1915/junius/index.htm -> 1915-junius.
+# Missing notes are reported as warnings; check quotations with `bookcreator check`.
+# [editorial]
+# dir         = "editorial/luxemburg"
+# intro_title = "Introduction"
+# note_label  = "Editor’s note"
+# attribution = "The introduction and notes were written for this edition by …"
