@@ -300,3 +300,14 @@ def test_marxists_chapter_navigation_removed():
     out = C.clean(doc, "https://www.marxists.org/archive/x/ch02.htm", {}, lambda u: None, marxists.JUNK_XPATHS)
     assert "Last Chapter" not in out and "Next:" not in out and "Text." in out
     assert "refers the reader to the Next Chapter" in out          # real prose is kept
+
+
+def test_marxists_back_to_top_lines_removed():
+    from bookcreator.sites import marxists
+    doc = C.parse('<body><p>Real text, see <a href="#top">the top</a> of this long paragraph for '
+                  'the argument that follows at some length.</p><hr/>'
+                  '<h5><a href="#top">Top of the page</a></h5><p><a href="#Top">Back to top</a></p>'
+                  '<p>More text.</p></body>')
+    out = C.clean(doc, "https://www.marxists.org/archive/x/a.htm", {}, lambda u: None, marxists.JUNK_XPATHS)
+    assert "Top of the page" not in out and "Back to top" not in out
+    assert "Real text" in out and "More text." in out          # prose that merely links to #top is kept
