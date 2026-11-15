@@ -76,6 +76,9 @@ JUNK_XPATHS = [
     ".//*[self::p or self::div or self::h3 or self::h4 or self::h5 or self::h6 or self::center]"
     "[.//a][contains(., 'Next Chapter') or contains(., 'Last Chapter') or contains(., 'Previous Chapter')]"
     "[string-length(normalize-space(.)) < 80]",
+    # "Top of the page" / "Back to top" lines (e.g. <h5><a href="#top">Top of the page</a></h5>)
+    ".//*[self::p or self::div or self::h3 or self::h4 or self::h5 or self::h6 or self::center]"
+    "[.//a[translate(@href, 'TOP', 'top') = '#top']][string-length(normalize-space(.)) < 40]",
 ]
 
 CONTENT_XPATHS: list[str] = []          # MIA pages are mostly content; chrome is stripped instead
