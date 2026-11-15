@@ -311,3 +311,23 @@ def test_marxists_back_to_top_lines_removed():
     out = C.clean(doc, "https://www.marxists.org/archive/x/a.htm", {}, lambda u: None, marxists.JUNK_XPATHS)
     assert "Top of the page" not in out and "Back to top" not in out
     assert "Real text" in out and "More text." in out          # prose that merely links to #top is kept
+
+
+# ------------------------------------------- the tool is credited in every book
+@pytest.mark.parametrize("editorial", [False, True])
+def test_book_creator_credited_before_editorial_attributions(editorial, tmp_path, monkeypatch):
+    from bookcreator import __url__
+    from bookcreator.build import Build
+    monkeypatch.chdir(tmp_path)
+    recipe = {"book": {"title": "T", "author": "A"},
+              "source": {"site": "generic", "index": "https://e.example/"}}
+    if editorial:
+        recipe["editorial"] = {"dir": "ed", "attribution": "Notes drafted with the assistance of an LLM."}
+    b = Build(recipe, tmp_path / "r.toml", verbose=False)
+    b.site.discover(None, recipe)                       # configure the generic adapter
+    page = b._license_page()
+    assert f'href="{__url__}"' in page and "book-creator" in page
+    if editorial:
+        assert page.index(__url__) < page.index("Editorial material") < page.index("assistance of an LLM")
+    else:
+        assert "Editorial material" not in page
