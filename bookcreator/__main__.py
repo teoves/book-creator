@@ -6,6 +6,7 @@
     bookcreator check output/my-book.epub           # validate structure + editorial quotes
     bookcreator preview output/my-book.epub         # first/last words of each chapter
     bookcreator texts recipes/my-book.toml DIR --batches 5   # plain texts for editorial work
+    bookcreator verify recipes/my-book.toml --require-review # notes vs evidence + reviews
 
 Paths (cache/, output/, editorial dirs) are relative to the current directory.
 """
@@ -51,6 +52,11 @@ def main(argv=None) -> int:
                    help="also split the works into N groups of similar length (batches.json)")
     t.add_argument("--refresh", action="store_true")
 
+    v = sub.add_parser("verify", help="check editor's notes against their evidence and review files")
+    v.add_argument("recipe", type=Path)
+    v.add_argument("--require-review", action="store_true",
+                   help="fail if a note has no independent review file")
+
     pv = sub.add_parser("preview", help="print the start and end of every chapter (spot leftover site chrome)")
     pv.add_argument("epub", type=Path)
     pv.add_argument("-n", "--words", type=int, default=40)
@@ -65,6 +71,13 @@ def main(argv=None) -> int:
         for i, (words, group) in enumerate(res.get("batches", [])):
             print(f"  batch {i}: {words:>7,} words, {len(group):>3} works")
         return 0
+
+    if a.cmd == "verify":
+        from .verify import print_results, verify_book
+        bd = Build(_load(a.recipe), a.recipe, verbose=False)
+        bd.discover()
+        bd.convert_pages()
+        return 0 if print_results(verify_book(bd, a.require_review)) else 1
 
     if a.cmd == "preview":
         from .check import preview

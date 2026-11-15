@@ -332,20 +332,25 @@ class Build:
         ep.write(out_path)
         return out_path
 
+    def work_texts(self) -> list[tuple[str, Work, str]]:
+        """(slug, work, plain text) for every work, in book order. Requires convert_pages()."""
+        out = []
+        for w in self.works:
+            parts = []
+            for c in w.chapters:
+                body = c.body.rsplit('<p class="source-url">', 1)[0]
+                body = re.sub(r"</(p|h\d|li|tr|blockquote|div)>|<br\s*/?>", "\n", body)
+                parts.append(re.sub(r"\n\s*\n+", "\n\n", _html_unescape(re.sub(r"<[^>]+>", "", body))).strip())
+            out.append((self.work_slug(w), w, "\n\n".join(parts)))
+        return out
+
     def export_texts(self, out_dir: Path, batches: int = 0) -> dict:
         """Write one plain-text file per work (for reading/drafting editorial notes) plus
         works.json, and optionally batches.json: works split into `batches` groups of similar
         total length, each group in book order. Requires convert_pages() to have run."""
         out_dir.mkdir(parents=True, exist_ok=True)
         works = []
-        for w in self.works:
-            slug = self.work_slug(w)
-            parts = []
-            for c in w.chapters:
-                body = c.body.rsplit('<p class="source-url">', 1)[0]
-                body = re.sub(r"</(p|h\d|li|tr|blockquote|div)>|<br\s*/?>", "\n", body)
-                parts.append(re.sub(r"\n\s*\n+", "\n\n", _html_unescape(re.sub(r"<[^>]+>", "", body))).strip())
-            text = "\n\n".join(parts)
+        for slug, w, text in self.work_texts():
             header = (f"WORK: {w.label}\nURL: {w.ref.url}\nSLUG: {slug}\n"
                       + "".join(f"PAGE: {c.url}\n" for c in w.chapters[1:]))
             (out_dir / f"{slug}.txt").write_text(f"{header}\n{text}\n", encoding="utf-8")

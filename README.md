@@ -118,6 +118,10 @@ The full process we use for writing these with AI agents is described in
 (`bookcreator texts recipes/<book>.toml DIR --batches 5`), drafting in parallel batches, the
 narrative style guide, and verification.
 
+`bookcreator verify recipes/<book>.toml` checks each note against its evidence file (the
+verbatim passages behind each claim) and, if present, an independent reviewer's verdicts, so
+that paraphrase errors don't slip through even when every quotation is exact.
+
 `bookcreator check` verifies that every “quoted passage” in a note appears verbatim in the work
 it introduces. Run it whenever notes are drafted or edited, by hand or with AI assistance.
 With `--strict` it exits non-zero if a quotation is found nowhere in the book (useful in CI).
